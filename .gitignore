@@ -1,3 +1,7 @@
+results.json
+scanResults.json
+errorResults.json
+notes.md
 # Binaries for programs and plugins
 *.exe
 *.exe~

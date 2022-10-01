@@ -10,14 +10,18 @@ import (
 	"time"
 )
 
+// job stores a port number and any error encountered when
+// scanning that port.
 type job struct {
 	Port int   `json:"port"`
 	Err  error `json:"err,omitempty"`
 }
 
-func worker(a string, timeout int, ports <-chan job, results chan<- job) {
+// worker checks a port number and sends the results of the scan
+// to the results channel.
+func worker(addr string, timeout int, ports <-chan job, results chan<- job) {
 	for p := range ports {
-		address := fmt.Sprintf("%v:%d", a, p.Port)
+		address := fmt.Sprintf("%s:%d", addr, p.Port)
 		conn, err := net.DialTimeout("tcp", address, time.Duration(timeout)*time.Millisecond)
 		if err != nil {
 			p.Err = err
@@ -36,7 +40,7 @@ func main() {
 	var ports int
 	var timeout int
 
-	flag.StringVar(&addr, "a", "scanme.nmap.org", "address to scan")
+	flag.StringVar(&addr, "a", "", "address to scan")
 	flag.BoolVar(&errorReport, "e", false, "report any errors")
 	flag.IntVar(&gophers, "g", 20, "number of goroutines to use")
 	flag.IntVar(&ports, "p", 1024, "upper boundary of ports to scan")
@@ -47,6 +51,8 @@ func main() {
 	if addr == "" {
 		log.Fatal("no address specified")
 	}
+
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ltime)
 
 	jobs := make(chan job, ports)
 	results := make(chan job, ports)
@@ -74,28 +80,24 @@ func main() {
 	}
 
 	if errorReport {
-		for _, port := range errorPorts {
-			fmt.Printf("ERROR while attempting port %d: %v\n", port.Port, port.Err)
-		}
-
 		err := output("errorResults.json", errorPorts)
 		if err != nil {
-			log.Println("errorResults error:", err)
+			errorLog.Println(err)
 		}
-
 	}
 
 	for _, port := range openPorts {
-		fmt.Printf("%d open\n", port.Port)
+		log.Printf("%d open\n", port.Port)
 	}
 
 	err := output("results.json", openPorts)
-
 	if err != nil {
-		log.Println("output error:", err)
+		errorLog.Println("output error:", err)
 	}
 }
 
+// output takes a string for a file name and a job slice,
+// marshals the job slice, and passes the data to writeData.
 func output(name string, data []job) error {
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -105,6 +107,9 @@ func output(name string, data []job) error {
 	return writeData(name, b)
 }
 
+// writeData takes in a string for a file name and a byte slice
+// and writes the data to a file. Any error in the process will be
+// returned.
 func writeData(name string, data []byte) error {
 	f, err := os.Create(name)
 	if err != nil {

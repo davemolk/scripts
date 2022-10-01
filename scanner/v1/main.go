@@ -11,11 +11,15 @@ import (
 	"time"
 )
 
+// results holds a mutex and a slice of ints
+// that stores any open ports found during the scan.
 type results struct {
 	mu   sync.Mutex
 	Open []int `json:"open"`
 }
 
+// add creates a lock on on the results struct, appends
+// the found port to the Open field, and releases the lock.
 func (r *results) add(i int) {
 	r.mu.Lock()
 	r.Open = append(r.Open, i)
@@ -37,6 +41,8 @@ func main() {
 	if addr == "" {
 		log.Fatal("no address specified")
 	}
+
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ltime)
 
 	r := &results{}
 
@@ -63,14 +69,18 @@ func main() {
 
 	b, err := json.Marshal(r.Open)
 	if err != nil {
-		log.Printf("Marshal err: %v\n", err)
+		errorLog.Fatalf("Marshal error: %v\n", err)
 	}
+
 	err = writeData("scanResults.json", b)
 	if err != nil {
-		log.Fatalf("writeData err: %v\n", err)
+		errorLog.Fatalf("writeData error: %v\n", err)
 	}
 }
 
+// writeData takes in a string for a file name and a byte slice
+// and writes the data to a file. Any error in the process will be
+// returned.
 func writeData(name string, data []byte) error {
 	f, err := os.Create(name)
 	if err != nil {
