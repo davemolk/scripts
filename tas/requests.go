@@ -64,8 +64,8 @@ func (t *tas) makeURL(url string) string {
 	now := time.Now()
 	curr := now.UnixMilli()
 	const begin = "https://web.archive.org/web/timemap/json?url="
-	const midd = "&matchType=prefix&collapse=urlkey&output=json&fl=original%2Cmimetype%2Ctimestamp%2Cendtimestamp%2Cgroupcount%2Cuniqcount&filter=!statuscode%3A%5B45%5D..&limit=10000&_="
-	u := fmt.Sprintf("%s%s%s%d", begin, url, midd, curr)
+	const mid = "&matchType=prefix&collapse=urlkey&output=json&fl=original%2Cmimetype%2Ctimestamp%2Cendtimestamp%2Cgroupcount%2Cuniqcount&filter=!statuscode%3A%5B45%5D..&limit=10000&_="
+	u := fmt.Sprintf("%s%s%s%d", begin, url, mid, curr)
 	return u
 }
 

@@ -1,13 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"sync"
+	"time"
 )
 
 type config struct {
@@ -45,10 +44,12 @@ func main() {
 	var config config
 	flag.IntVar(&config.gophers, "g", 10, "number of gophers")
 	flag.BoolVar(&config.json, "json", true, "output results as json (default true)")
-	flag.IntVar(&config.timeout, "t", 5000, "timeout for requests (in ms, default 5000)")
+	flag.IntVar(&config.timeout, "t", 5000, "request timeout (in ms, default 5000)")
 	flag.BoolVar(&config.txt, "txt", false, "output results as txt (default false)")
 	flag.StringVar(&config.url, "u", "", "url to get")
 	flag.Parse()
+
+	start := time.Now()
 
 	t := &tas{
 		config: config,
@@ -87,33 +88,19 @@ func main() {
 	} else {
 		title = "tas/results.json"
 	}
+
 	t.writeData(title, t.results.results)
-}
-
-func (t *tas) writeData(title string, data map[int][]string) {
-	f, err := os.Create(title)
-	if err != nil {
-		log.Fatal(err)
+	
+	for i, v := range t.results.results {
+		wg.Add(1)
+		go func (i int, v []string) {
+			defer wg.Done()
+			name := fmt.Sprintf("tas/%d.txt", i)
+			t.fileByStatusCode(name, v)
+		}(i, v)
 	}
-	defer f.Close()
 
-	if t.config.txt {
-		for i, d := range data {
-			line := fmt.Sprintf("%d: %s", i, d)
-			fmt.Fprintln(f, line)
-		}
-	} else {
-		b, err := json.Marshal(data)
-		if err != nil {
-			log.Fatalf("marshal error within writeData: %v", err)
-		}
-		_, err = f.Write(b)
-		if err != nil {
-			log.Fatalf("write error within writeData: %v", err)
-		}
-		err = f.Sync()
-		if err != nil {
-			log.Fatalf("sync error: %v", err)
-		}
-	}
+	wg.Wait()
+
+	log.Printf("Took: %f seconds\n", time.Since(start).Seconds())
 }
