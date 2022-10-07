@@ -53,9 +53,26 @@ func (t *tas) testURLs(url string) {
 	t.results.add(resp.StatusCode, url)
 }
 
-// makeClient returns a single client for reuse.
-func (t *tas) makeClient() *http.Client {
-	return &http.Client{}
+// makeClient returns a single client for reuse
+func (t *tas) makeClient(redirect bool) *http.Client {
+	return &http.Client{
+		CheckRedirect: t.allowRedirects(redirect),
+	}
+}
+
+// allowRedirects takes in a boolean whose value is determined by the redirects flag
+// If the flag is true, allowRedirects returns nil and redirects will be allowed. Otherwise,
+// allowRedirects returns a function for the CheckRedirect field of the http.Client that
+// blocks redirects.
+func (t *tas) allowRedirects(redirect bool) func(*http.Request, []*http.Request) error {
+	if redirect {
+		return nil
+	} else {
+		return func(req *http.Request, via []*http.Request) error {
+			log.Printf("blocked attempted redirect to %s\n", req.URL.String())
+			return http.ErrUseLastResponse
+		}
+	}
 }
 
 // makeURL takes in the user-supplied URL and builds the

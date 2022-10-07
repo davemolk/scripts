@@ -12,6 +12,7 @@ import (
 type config struct {
 	gophers int
 	json    bool
+	redirect bool
 	timeout int
 	txt     bool
 	url     string
@@ -44,6 +45,7 @@ func main() {
 	var config config
 	flag.IntVar(&config.gophers, "g", 10, "number of gophers")
 	flag.BoolVar(&config.json, "json", true, "output results as json (default true)")
+	flag.BoolVar(&config.redirect, "r", true, "allow redirects (default true)")
 	flag.IntVar(&config.timeout, "t", 5000, "request timeout (in ms, default 5000)")
 	flag.BoolVar(&config.txt, "txt", false, "output results as txt (default false)")
 	flag.StringVar(&config.url, "u", "", "url to get")
@@ -59,7 +61,7 @@ func main() {
 		log.Fatal("url cannot be empty")
 	}
 
-	t.client = t.makeClient()
+	t.client = t.makeClient(config.redirect)
 	t.results = newStatusMap()
 
 	s, err := t.getURLs(config.url, config.timeout)
