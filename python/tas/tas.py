@@ -27,11 +27,6 @@ def make_request(url, timeout):
 def response_to_json(response):
     return response.json()
 
-def test_url(url, timeout):
-    r = make_request(url, timeout)
-    print(url)
-    print(r.status_code)
-    
 def get_user_agent():
     agents = [
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
@@ -48,18 +43,38 @@ def get_user_agent():
     rando = random.randint(0, len(agents) - 1)
     return agents[rando]
 
-
-
 def get_user_input():
     parser = argparse.ArgumentParser(description="submit url plz")
-    parser.add_argument('-u', '--url', type=str, help='provide full url')
-    parser.add_argument('-t', '--timeout', type=int, help='timeout in ms')
+    parser.add_argument('-u', '--url', type=check_input, default="", help='provide full url')
+    parser.add_argument('-j', '--json', type=bool, default=True, help='output results as json')
+    parser.add_argument('-t', '--timeout', type=int, default=5000, help='timeout in ms')
+    parser.add_argument('-txt', type=bool, default=False, help='output results as txt')
     args = parser.parse_args()
-    return args.url, args.timeout
+    return args.url, args.timeout, args.txt
+
+def check_input(u):
+    s = str(u)
+    if s == "":
+        raise argparse.ArgumentTypeError('must provide a URL')
+    return s
+
+def write_json(results):
+    with open('results.json', 'w') as f:
+            json.dump(results, f, indent=2, ensure_ascii = False)
+
+def write_txt(name, results, key=None):
+    if key is None:
+        with open(name, 'w') as f:
+            for k, v in results.items():
+                f.write(f'{k}: {v}\n')
+    else:
+        with open(name, 'w') as f:
+            for v in results[key]:
+                f.write(f'{v}\n')
 
 
 if __name__ == "__main__":
-    url, timeout = get_user_input()
+    url, timeout, txt = get_user_input()
     timeout = timeout / 1000
     response = make_request(url, timeout)
     data = response_to_json(response)
@@ -71,7 +86,9 @@ if __name__ == "__main__":
             r = s.get(u[0], headers=s.headers, timeout=timeout)
             results[r.status_code].append(u[0])
 
-    js = json.dumps(results, indent=2)
-    
-    with open('results.json', 'w') as f:
-        json.dump(results, f, indent=2)
+    if not txt:
+        write_json(results)
+    else:
+        write_txt("results.txt", results)
+    for k in results.keys():
+        write_txt(f'{k}.txt', results, k)
