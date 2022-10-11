@@ -16,20 +16,9 @@ import (
 // is returned, along with any error.
 func (t *tas) getURLs(url string, timeout int) ([][]string, error) {
 	u := t.makeURL(url)
-	resp, err := t.makeRequest(u, timeout)
+	b, err := t.makeRequest(u, timeout, false)
 	if err != nil {
 		return nil, fmt.Errorf("makeRequest err: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
-	}
-
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("body read err: %w", err)
 	}
 
 	var s [][]string
@@ -41,16 +30,14 @@ func (t *tas) getURLs(url string, timeout int) ([][]string, error) {
 	return s, nil
 }
 
-// testURLs takes in a URL, makes a request, and
-// writes the results to the statusMap.
+// testURLs takes in a URL and makes a request, passing true to 
+// makeRequest in order to add the response code to the statusMap.
 func (t *tas) testURLs(url string) {
-	resp, err := t.makeRequest(url, t.config.timeout)
+	_, err := t.makeRequest(url, t.config.timeout, true)
 	if err != nil {
-		log.Printf("error in testURLs: %v", err)
+		log.Printf("testing %s unsuccessful: %v", url, err)
 		return
 	}
-	defer resp.Body.Close()
-	t.results.add(resp.StatusCode, url)
 }
 
 // makeClient returns a single client for reuse
@@ -86,8 +73,9 @@ func (t *tas) makeURL(url string) string {
 	return u
 }
 
-// makeRequest takes in a URL and a timeout and returns a response and any error.
-func (t *tas) makeRequest(url string, timeout int) (*http.Response, error) {
+// makeRequest takes in a URL, a timeout, and a boolean and returns a response and any error.
+// if the boolean is true, the status code and URL are added to the statusMap.
+func (t *tas) makeRequest(url string, timeout int, test bool) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
 	defer cancel()
 
@@ -104,7 +92,23 @@ func (t *tas) makeRequest(url string, timeout int) (*http.Response, error) {
 		return nil, err
 	}
 
-	return resp, nil
+	defer resp.Body.Close()
+
+	if test {
+		t.results.add(resp.StatusCode, url)
+		return nil, nil
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
+	}
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("body read err: %w", err)
+	}
+
+	return b, nil
 }
 
 // randomUA assembles a slice of 10 user-agents and picks one.
