@@ -2,6 +2,8 @@ results.json
 scanResults.json
 errorResults.json
 notes.md
+foo.py
+test.txt
 # Binaries for programs and plugins
 *.exe
 *.exe~
