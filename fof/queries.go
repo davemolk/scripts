@@ -54,7 +54,6 @@ func (f *fof) makeParseData() []*parseData {
 	}
 	pd = append(pd, bing)
 
-	// blocks a lot
 	google := &parseData{
 		blurbSelector: "div[style='-webkit-line-clamp:2'] span",
 		itemSelector:  "div.g",
@@ -81,4 +80,51 @@ func (f *fof) makeQueryString(wg *sync.WaitGroup, data *queryData, term string, 
 	// jenky, lol
 	url = fmt.Sprintf("%sGETTERM%s", url, term)
 	ch <- url
+}
+
+func (f *fof) makeSearchURLs(qdSlice [] *queryData) [2]chan string {
+	var chans [2]chan string
+	for i := range chans {
+		chans[i] = make(chan string, len(f.terms))
+	}
+
+	var wg sync.WaitGroup
+	for _, term := range f.terms {
+		for i, qd := range qdSlice {
+			wg.Add(1)
+			go f.makeQueryString(&wg, qd, term, chans[i])
+		}
+	}
+
+	wg.Wait()
+	for i := range chans {
+		close(chans[i])
+	}
+
+	return chans
+}
+
+func (f *fof) getAndParseData(pdSlice []*parseData, chans [2]chan string) {
+	var wg sync.WaitGroup
+	tokens := make(chan struct{}, f.config.concurrency)
+	for i, ch := range chans {
+		for u := range ch {
+			wg.Add(1)
+			tokens <- struct{}{}
+			go func(i int, u string) {
+				defer wg.Done()
+				urlTerm := strings.Split(u, "GETTERM")
+				s, err := f.makeRequest(urlTerm[0], f.config.timeout)
+				if err != nil {
+					fmt.Println("error")
+					<-tokens
+					return
+				}
+				<-tokens
+				f.parseSearchResults(s, urlTerm[1], pdSlice[i])
+			}(i, u)
+		}
+	}
+
+	wg.Wait()
 }

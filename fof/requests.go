@@ -36,8 +36,7 @@ func (f *fof) makeRequest(url string, timeout int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// fmt.Println(string(b))
+	
 	return string(b), nil
 }
 

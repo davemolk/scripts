@@ -7,21 +7,26 @@ import (
 	"os"
 )
 
+// readInput takes in the file name for a list of terms and returns
+// a string slice containing those terms.
 func (f *fof) readInput(name string) ([]string, error) {
-	var names []string
+	var terms []string
 	n, err := os.Open(name)
 	if err != nil {
-		return names, err
+		return terms, err
 	}
 	defer n.Close()
 
 	scanner := bufio.NewScanner(n)
 	for scanner.Scan() {
-		names = append(names, scanner.Text())
+		terms = append(terms, scanner.Text())
 	}
-	return names, scanner.Err()
+	return terms, scanner.Err()
 }
 
+// getTerms looks at the user flag input, determines whether a single
+// term or a file name for a list of terms has been selected, and 
+// adds the appropriate field to the fof struct instance.
 func (f *fof) getTerms() {
 	var terms []string
 	switch {
