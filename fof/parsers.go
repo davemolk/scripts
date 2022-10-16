@@ -32,77 +32,26 @@ func (s *searchesMap) store(term string, search search) {
 	s.mu.Unlock()
 }
 
-func (f *fof) parseBing(data, control string) {
+func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 	sr := search{}
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(data))
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	test := doc.Find("head title").Text()
-	if test == control {
-		fmt.Println("match")
-	} else {
-		fmt.Println("no match")
-	}
+	// test := doc.Find("head title").Text()
+	// if test == control {
+	// 	fmt.Println("match")
+	// } else {
+	// 	fmt.Println("no match")
+	// }
 
-	doc.Find("li.b_algo").Each(func(i int, s *goquery.Selection) {
-		if link, ok := s.Find("h2 a").Attr("href"); ok {
-			sr.URL = link
-		} else {
-			sr.URL = ""
-		}
-		blurb := s.Find("div.b_caption p").Text()
-		sr.Blurb = blurb
-		f.searches.store("music", sr)
-	})
-}
-
-// eventually just pass in selectors to one function...
-func (f *fof) parseGoogle(data, control string) {
-	sr := search{}
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(data))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	test := doc.Find("head title").Text()
-	if test == control {
-		fmt.Println("match")
-	} else {
-		fmt.Println("no match")
-	}
-
-	doc.Find("div.g").Each(func(i int, s *goquery.Selection) {
-		if link, ok := s.Find("a").Attr("href"); ok {
+	doc.Find(pd.itemSelector).Each(func(i int, s *goquery.Selection) {
+		if link, ok := s.Find(pd.linkSelector).Attr("href"); ok {
 			sr.URL = link
 		}
-		blurb := s.Find("div[style='-webkit-line-clamp:2'] span").Text()
+		blurb := s.Find(pd.blurbSelector).Text()
 		sr.Blurb = blurb
-		f.searches.store("music", sr)
-	})
-}
-
-func (f *fof) parseYahoo(data, control string) {
-	sr := search{}
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(data))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	test := doc.Find("head title").Text()
-	if test == control {
-		fmt.Println("match")
-	} else {
-		fmt.Println("no match")
-	}
-
-	doc.Find("div.algo").Each(func(i int, s *goquery.Selection) {
-		if link, ok := s.Find("h3 > a").Attr("href"); ok {
-			sr.URL = link
-		}
-		blurb := s.Find("div.compText").Text()
-		sr.Blurb = blurb
-		f.searches.store("music", sr)
+		f.searches.store(term, sr)
 	})
 }

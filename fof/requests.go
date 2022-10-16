@@ -6,22 +6,8 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"strings"
 	"time"
 )
-
-func (f *fof) makeQueryString(data *queryData) ([]string, []string) {
-	cleanQ := strings.Replace(data.query, " ", data.spacer, -1)
-	var urls []string
-	var controls []string
-	for _, t := range data.terms {
-		url := fmt.Sprintf("%s%s%s%s", data.base, cleanQ, data.spacer, t)
-		control := fmt.Sprintf("%s %s %s", data.query, t, data.controlName)
-		urls = append(urls, url)
-		controls = append(controls, control)
-	}
-	return urls, controls
-}
 
 func (f *fof) makeRequest(url string, timeout int) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
