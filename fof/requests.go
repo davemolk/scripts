@@ -29,14 +29,14 @@ func (f *fof) makeRequest(url string, timeout int) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("HTTP response: %d", resp.StatusCode)
+		return "", fmt.Errorf("HTTP response: %d for %s", resp.StatusCode, url)
 	}
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(b), nil
 }
 

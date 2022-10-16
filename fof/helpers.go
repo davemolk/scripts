@@ -33,7 +33,7 @@ func (f *fof) getTerms() {
 	case f.config.file != "":
 		terms, err := f.readInput(f.config.file)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("unable to get terms: %v",err)
 		}
 		f.terms = terms
 	case f.config.term != "":
