@@ -15,10 +15,11 @@ type parseData struct {
 	blurbSelector string
 	itemSelector  string
 	linkSelector  string
-	name string
+	name          string
 }
 
 func (f *fof) makeQueryData() []*queryData {
+	f.infoLog.Println("Making slice of query data...")
 	var qdSlice []*queryData
 
 	ask := &queryData{
@@ -39,6 +40,12 @@ func (f *fof) makeQueryData() []*queryData {
 	}
 	qdSlice = append(qdSlice, brave)
 
+	duck := &queryData{
+		base:   "https://html.duckduckgo.com/html?q=",
+		spacer: "+",
+	}
+	qdSlice = append(qdSlice, duck)
+
 	// blocks a lot
 	google := &queryData{
 		base:   "https://www.google.com/search?q=",
@@ -53,7 +60,7 @@ func (f *fof) makeQueryData() []*queryData {
 	qdSlice = append(qdSlice, yahoo)
 
 	yandex := &queryData{
-		base: "https://yandex.com/search/?text=",
+		base:   "https://yandex.com/search/?text=",
 		spacer: "+",
 	}
 	qdSlice = append(qdSlice, yandex)
@@ -62,13 +69,14 @@ func (f *fof) makeQueryData() []*queryData {
 }
 
 func (f *fof) makeParseData() []*parseData {
+	f.infoLog.Println("Making slice of parse data...")
 	var pdSlice []*parseData
 
 	ask := &parseData{
 		blurbSelector: "div.PartialSearchResults-item p",
 		itemSelector:  "div.PartialSearchResults-item",
 		linkSelector:  "a.PartialSearchResults-item-title-link",
-		name: "ask",
+		name:          "ask",
 	}
 	pdSlice = append(pdSlice, ask)
 
@@ -76,7 +84,7 @@ func (f *fof) makeParseData() []*parseData {
 		blurbSelector: "div.b_caption p",
 		itemSelector:  "li.b_algo",
 		linkSelector:  "h2 a",
-		name: "bing",
+		name:          "bing",
 	}
 	pdSlice = append(pdSlice, bing)
 
@@ -84,15 +92,23 @@ func (f *fof) makeParseData() []*parseData {
 		blurbSelector: "div.snippet-content p.snippet-description",
 		itemSelector:  "div.fdb",
 		linkSelector:  "div.fdb > a.result-header",
-		name: "brave",
+		name:          "brave",
 	}
 	pdSlice = append(pdSlice, brave)
+
+	duck := &parseData{
+		blurbSelector: "div.links_main > a",
+		itemSelector:  "div.web-result",
+		linkSelector:  "div.links_main > a",
+		name:          "duck",
+	}
+	pdSlice = append(pdSlice, duck)
 
 	google := &parseData{
 		blurbSelector: "div[style='-webkit-line-clamp:2'] span",
 		itemSelector:  "div.g",
 		linkSelector:  "a",
-		name: "google",
+		name:          "google",
 	}
 	_ = google
 
@@ -100,15 +116,15 @@ func (f *fof) makeParseData() []*parseData {
 		blurbSelector: "div.compText",
 		itemSelector:  "div.algo",
 		linkSelector:  "h3 > a",
-		name: "yahoo",
+		name:          "yahoo",
 	}
 	pdSlice = append(pdSlice, yahoo)
 
 	yandex := &parseData{
 		blurbSelector: "div.TextContainer",
-		itemSelector: "li.serp-item",
-		linkSelector: "div.VanillaReact > a",
-		name: "yandex",
+		itemSelector:  "li.serp-item",
+		linkSelector:  "div.VanillaReact > a",
+		name:          "yandex",
 	}
 	pdSlice = append(pdSlice, yandex)
 
@@ -117,15 +133,15 @@ func (f *fof) makeParseData() []*parseData {
 
 func (f *fof) makeQueryString(wg *sync.WaitGroup, data *queryData, term string, ch chan string) {
 	defer wg.Done()
-	cleanQ := strings.Replace(f.config.query, " ", data.spacer, -1)
+	cleanQ := strings.Replace(f.config.searchTarget, " ", data.spacer, -1)
 	url := fmt.Sprintf("%s%s%s%s", data.base, cleanQ, data.spacer, term)
 	// jenky, lol
 	url = fmt.Sprintf("%sGETTERM%s", url, term)
 	ch <- url
 }
 
-func (f *fof) makeSearchURLs(qdSlice [] *queryData) [5]chan string {
-	var chans [5]chan string
+func (f *fof) makeSearchURLs(qdSlice []*queryData) [6]chan string {
+	var chans [6]chan string
 	for i := range chans {
 		chans[i] = make(chan string, len(f.terms))
 	}
@@ -143,10 +159,11 @@ func (f *fof) makeSearchURLs(qdSlice [] *queryData) [5]chan string {
 		close(chans[i])
 	}
 
+	f.infoLog.Println("Search URLs completed.")
 	return chans
 }
 
-func (f *fof) getAndParseData(pdSlice []*parseData, chans [5]chan string) {
+func (f *fof) getAndParseData(pdSlice []*parseData, chans [6]chan string) {
 	var wg sync.WaitGroup
 	tokens := make(chan struct{}, f.config.concurrency)
 	for i, ch := range chans {
@@ -158,7 +175,7 @@ func (f *fof) getAndParseData(pdSlice []*parseData, chans [5]chan string) {
 				urlTerm := strings.Split(u, "GETTERM")
 				s, err := f.makeRequest(urlTerm[0], f.config.timeout)
 				if err != nil {
-					fmt.Printf("error in makeRequest: %v\n", err)
+					f.errorLog.Printf("error in makeRequest: %v\n", err)
 					<-tokens
 					return
 				}
@@ -170,3 +187,18 @@ func (f *fof) getAndParseData(pdSlice []*parseData, chans [5]chan string) {
 
 	wg.Wait()
 }
+
+// func (f *fof) test(pd *parseData, ch chan string) {
+// 	for u := range ch {
+// 		func(u string) {
+// 			urlTerm := strings.Split(u, "GETTERM")
+// 			s, err := f.makeRequest(urlTerm[0], f.config.timeout)
+// 			if err != nil {
+// 				fmt.Printf("error in makeRequest: %v\n", err)
+
+// 				return
+// 			}
+// 			f.parseSearchResults(s, urlTerm[1], pd)
+// 		}(u)
+// 	}
+// }
