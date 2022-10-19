@@ -2,23 +2,22 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
 
 type config struct {
-	concurrency int
-	searchTarget       string
-	term        string
-	file        string
-	timeout     int
+	concurrency  int
+	searchTarget string
+	term         string
+	file         string
+	timeout      int
 }
 
 type fof struct {
 	config   config
 	errorLog *log.Logger
-	infoLog *log.Logger
+	infoLog  *log.Logger
 	searches *searchesMap
 	terms    []string
 }
@@ -35,18 +34,21 @@ func main() {
 
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ltime|log.Lshortfile)
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ltime)
-	
+
 	searches := newSearchMap()
 
 	f := &fof{
 		config:   config,
 		errorLog: errorLog,
-		infoLog: infoLog,
+		infoLog:  infoLog,
 		searches: searches,
 	}
 
 	f.getTerms()
-	
+	for _, t := range f.terms {
+		searches.searches[t] = make(map[string]string)
+	}
+
 	qdSlice := f.makeQueryData()
 	pdSlice := f.makeParseData()
 
@@ -54,7 +56,4 @@ func main() {
 
 	f.getAndParseData(pdSlice, chans)
 
-	// f.test(pdSlice[3], chans[3])
-
-	fmt.Println(f.searches.searches)
 }

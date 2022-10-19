@@ -4,6 +4,8 @@ errorResults.json
 notes.md
 foo.py
 test.txt
+test.csv
+foo/
 # Binaries for programs and plugins
 *.exe
 *.exe~
