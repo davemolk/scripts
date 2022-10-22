@@ -5,7 +5,9 @@ notes.md
 foo.py
 test.txt
 test.csv
+test.json
 foo/
+.DS_Store
 # Binaries for programs and plugins
 *.exe
 *.exe~
