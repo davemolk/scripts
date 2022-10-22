@@ -37,25 +37,26 @@ def get_user_input():
     return args.joke, args.term
 
 def prep_format(joke: str):
-    if "?" in joke:
-        format(joke, "?")
+    joke = joke.replace('"', "")
+    if "?" in joke[:-1]:
+        setup_punchline(joke, "?")
     elif "." in joke[:-1]:
-        format(joke, ".")
+        setup_punchline(joke, ".")
+    else:
+        print(joke)
 
-def format(text, splitter):
+def setup_punchline(text, splitter):
     split_text = text.split(splitter)
-    print(split_text[0] + splitter + "\n")
-    time.sleep(2)
-    print(split_text[1].strip())
+    if len(split_text) == 1:
+        print(text)
+    else:
+        print(split_text[0] + splitter + "\n")
+        time.sleep(2)
+        if splitter == ".": 
+            print(split_text[1].strip() + ".")
+        else:
+            print(split_text[1].strip())
 
-class BaseException(Exception):
-    pass
-
-class JSONException(BaseException):
-    pass
-
-class NoJokesFoundException(BaseException):
-    pass
 
 if __name__ == "__main__":
     random_url = "https://icanhazdadjoke.com/"
@@ -70,14 +71,9 @@ if __name__ == "__main__":
         if results == "":
             print("no jokes for that term")
         else:
-            try:
-                rando = random.randint(0, len(results["results"]) - 1)
-                joke = results["results"][rando]["joke"]
-            except JSONException:        
-                print("")
-            else:
-                prep_format(joke)
-
+            rando = random.randint(0, len(results["results"]) - 1)
+            joke = results["results"][rando]["joke"]
+            prep_format(joke)
     else:
         headers = {
             "Accept": "text/plain",
