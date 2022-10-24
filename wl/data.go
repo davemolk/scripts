@@ -25,6 +25,12 @@ func (wm *WordMap) add(w string) {
 	wm.words[w]++
 }
 
+func (wm *WordMap) delete(key string) {
+	wm.mu.Lock()
+	defer wm.mu.Unlock()
+	delete(wm.words, key)
+}
+
 func (wm *WordMap) sort() []string {
 	keys := make([]string, 0, len(wm.words))
 	for key := range wm.words {

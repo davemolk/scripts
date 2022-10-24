@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -47,4 +50,30 @@ func (w *wl) dropLowCount(keys []string) []string {
 		}
 	}
 	return keys
+}
+
+func (w *wl) filterTerms() {
+	terms, err := w.readInput(w.config.filter)
+	if err != nil {
+		log.Println(err)
+	}
+	for _, term := range terms {
+		if _, ok := w.wordMap.words[term]; ok {
+			w.wordMap.delete(term)
+		}
+	}
+}
+
+func (w *wl) readInput(name string) ([]string, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var terms []string
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		terms = append(terms, scanner.Text()) 
+	}
+	return terms, scanner.Err()
 }

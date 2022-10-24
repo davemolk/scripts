@@ -8,6 +8,7 @@ import (
 )
 
 type config struct {
+	filter string
 	minCount  int
 	minLength int
 	timeout   int
@@ -22,6 +23,7 @@ type wl struct {
 
 func main() {
 	var config config
+	flag.StringVar(&config.filter, "f", "", "file name containing words to filter out of results")
 	flag.IntVar(&config.minCount, "c", 0, "minimum count to include word in results")
 	flag.IntVar(&config.minLength, "len", 0, "minimum word length to consider")
 	flag.IntVar(&config.timeout, "t", 5000, "request timeout (in ms)")
@@ -55,7 +57,11 @@ func main() {
 		}(word)
 	}
 	wg.Wait()
-
+	
+	if config.filter != "" {
+		w.filterTerms()
+	}
+	
 	keys := w.wordMap.sort()
 	keysCount := w.dropLowCount(keys)
 

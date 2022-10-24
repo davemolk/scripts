@@ -8,6 +8,7 @@ test.csv
 test.json
 foo/
 .DS_Store
+filter.txt
 # Binaries for programs and plugins
 *.exe
 *.exe~

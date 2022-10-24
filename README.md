@@ -12,6 +12,9 @@ two different ways to make a port scanner
 ## tas
 throw against site (pull down archived links from Wayback Machine, run against the site, see what status codes currently are)
 
+## wl
+supply a url, get a wordlist (for that page only). adjust your results by filtering out terms, adding a minimum length, or requiring a certain instance count.
+
 # python
 ## tas
 throw against site (pull down archived links from Wayback Machine, run against the site, see what status codes currently are) (not concurrent...yet)
