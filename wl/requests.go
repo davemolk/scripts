@@ -10,7 +10,7 @@ import (
 )
 
 func (w *wl) makeRequest(url string, timeout int) (*goquery.Document, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5000) * time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5000)*time.Millisecond)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -22,7 +22,7 @@ func (w *wl) makeRequest(url string, timeout int) (*goquery.Document, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("statusCode: %d", resp.StatusCode)
 	}

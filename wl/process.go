@@ -12,7 +12,7 @@ func (w *wl) processData(doc *goquery.Document) []string {
 	body := doc.Text()
 	body = w.noBlank.ReplaceAllString(body, " ")
 	body = strings.Replace(body, "\n", "", -1)
-	
+
 	return strings.Split(body, " ")
 }
 
@@ -24,7 +24,7 @@ func (w *wl) removePunctuation(word string) string {
 	return strings.ToLower(word)
 }
 
-// prob add more
+// add more?
 func (w *wl) getPunctuation() []string {
 	return []string{
 		",",
@@ -33,5 +33,18 @@ func (w *wl) getPunctuation() []string {
 		";",
 		"!",
 		"?",
+		"—",
 	}
+}
+
+func (w *wl) dropLowCount(keys []string) []string {
+	if w.config.minCount > 0 {
+		for i, key := range keys {
+			if w.wordMap.words[key] < w.config.minCount {
+				keys = keys[:i]
+				break
+			}
+		}
+	}
+	return keys
 }
