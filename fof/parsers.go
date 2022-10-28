@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"strings"
 	"sync"
 
@@ -66,27 +67,48 @@ func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 	}
 
 	doc.Find(pd.itemSelector).Each(func(i int, s *goquery.Selection) {
-		// TODO: need to parse links by some of the search engines.
+		// no link, no point in getting blurb
 		if link, ok := s.Find(pd.linkSelector).Attr("href"); !ok {
 			f.errorLog.Printf("unable to get link for %s\n", pd.name)
-			// no link, no point in getting blurb
 			return
 		} else {
+			cleanLink := f.cleanLinks(link)
 			blurb := s.Find(pd.blurbSelector).Text()
 			if blurb == "" {
 				f.errorLog.Printf("unable to get blurb for %s\n", pd.name)
 			}
-			cleaned := f.cleanBlurb(blurb)
-			localResults[link] = cleaned
-			f.searches.store(term, link, cleaned)
+			cleanBlurb := f.cleanBlurb(blurb)
+			localResults[cleanLink] = cleanBlurb
+			f.searches.store(term, cleanLink, cleanBlurb)
 		}
 
 	})
 }
 
 func (f *fof) cleanBlurb(s string) string {
-	cleaned := f.noBlank.ReplaceAllString(s, " ")
-	cleaned = strings.TrimSpace(cleaned)
-	cleaned = strings.ReplaceAll(cleaned, "\n", "")
-	return cleaned
+	cleanB := f.noBlank.ReplaceAllString(s, " ")
+	cleanB = strings.TrimSpace(cleanB)
+	cleanB = strings.ReplaceAll(cleanB, "\n", "")
+	return cleanB
+}
+
+func (f *fof) cleanLinks(s string) string {
+	u, err := url.QueryUnescape(s)
+	if err != nil {
+		f.errorLog.Printf("unable to clean %s: %v\n", s, err)
+		return s
+	}
+	if strings.HasPrefix(u, "//duck") {
+		removePrefix := strings.Split(u, "=")
+		u = removePrefix[1]
+		removeSuffix := strings.Split(u, "&rut")
+		u = removeSuffix[0]
+	}
+	if strings.HasPrefix(u, "https://r.search.yahoo.com/") {
+		removePrefix := strings.Split(u, "/RU=")
+		u = removePrefix[1]
+		removeSuffix := strings.Split(u, "/RK=")
+		u = removeSuffix[0]
+	}
+	return u
 }

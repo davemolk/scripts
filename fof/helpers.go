@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"log"
 	"os"
@@ -47,7 +48,7 @@ func (f *fof) writeData(name string, data map[string]string) {
 	}
 	defer file.Close()
 
-	b, err := json.MarshalIndent(data, "", "    ")
+	b, err := f.encode(data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,4 +60,13 @@ func (f *fof) writeData(name string, data map[string]string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (f *fof) encode(data map[string]string) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "    ")
+	err := encoder.Encode(data)
+	return bytes.TrimRight(buf.Bytes(), "\n"), err
 }
