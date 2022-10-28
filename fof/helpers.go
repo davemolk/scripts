@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"log"
 	"os"
 )
 
@@ -26,7 +28,6 @@ func (f *fof) readInput(name string) ([]string, error) {
 // term or a file name for a list of terms has been selected, and
 // adds the appropriate field to the fof struct instance.
 func (f *fof) getTerms() {
-	var terms []string
 	switch {
 	case f.config.file != "":
 		terms, err := f.readInput(f.config.file)
@@ -34,10 +35,28 @@ func (f *fof) getTerms() {
 			f.errorLog.Fatalf("unable to get terms from file: %v", err)
 		}
 		f.terms = terms
-	case f.config.term != "":
-		terms = append(terms, f.config.term)
-		f.terms = terms
 	default:
 		f.errorLog.Println("No search terms supplied. Continuing with search target only.")
+	}
+}
+
+func (f *fof) writeData(name string, data map[string]string) {
+	file, err := os.Create(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = file.Write(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = file.Sync()
+	if err != nil {
+		log.Fatal(err)
 	}
 }

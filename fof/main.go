@@ -2,14 +2,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"sync"
 )
 
 type config struct {
 	concurrency  int
 	searchTarget string
-	term         string
 	file         string
 	timeout      int
 }
@@ -18,6 +20,7 @@ type fof struct {
 	config   config
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	noBlank  *regexp.Regexp
 	searches *searchesMap
 	terms    []string
 }
@@ -25,9 +28,8 @@ type fof struct {
 func main() {
 	var config config
 	flag.IntVar(&config.concurrency, "c", 10, "max number of goroutines to use at any given time")
-	flag.StringVar(&config.searchTarget, "s", "", "search target (please enclose phrases in quotes)")
-	flag.StringVar(&config.term, "term", "", "term to search for")
-	flag.StringVar(&config.file, "file", "", "file name containing a list of terms")
+	flag.StringVar(&config.searchTarget, "s", "", "base search target (please enclose phrases in quotes)")
+	flag.StringVar(&config.file, "f", "", "file name containing a list of terms")
 	flag.IntVar(&config.timeout, "t", 5000, "timeout (in ms, default 5000)")
 
 	flag.Parse()
@@ -36,11 +38,18 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ltime)
 
 	searches := newSearchMap()
+	noBlank := regexp.MustCompile(`\s{2,}`)
+
+	err := os.Mkdir("data", 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	f := &fof{
 		config:   config,
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		noBlank:  noBlank,
 		searches: searches,
 	}
 
@@ -56,4 +65,15 @@ func main() {
 
 	f.getAndParseData(pdSlice, chans)
 
+	var wg sync.WaitGroup
+	for _, t := range f.terms {
+		wg.Add(1)
+		go func(t string) {
+			defer wg.Done()
+			name := fmt.Sprintf("data/%s.json", t)
+			f.writeData(name, f.searches.searches[t])
+		}(t)
+	}
+
+	wg.Wait()
 }

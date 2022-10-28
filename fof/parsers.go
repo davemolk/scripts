@@ -69,12 +69,12 @@ func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 		// TODO: need to parse links by some of the search engines.
 		if link, ok := s.Find(pd.linkSelector).Attr("href"); !ok {
 			f.errorLog.Printf("unable to get link for %s\n", pd.name)
-			// exit because no link means no point in getting blurb
+			// no link, no point in getting blurb
 			return
 		} else {
 			blurb := s.Find(pd.blurbSelector).Text()
 			if blurb == "" {
-				f.errorLog.Printf("unable to get blurb for %s\n", pd.name) // check that it is this w/ no result
+				f.errorLog.Printf("unable to get blurb for %s\n", pd.name)
 			}
 			var cleaned string
 			if pd.name == "brave" {
@@ -83,18 +83,16 @@ func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 				cleaned = f.cleanBlurb(blurb, false)
 			}
 			localResults[link] = cleaned
-			f.searches.store(term, link, blurb)
+			f.searches.store(term, link, cleaned)
 		}
 
 	})
 }
 
 func (f *fof) cleanBlurb(s string, b bool) string {
-	cleaned := strings.TrimSpace(s)
+	// handle internal spaces (mainly w/ Brave), otherwise use TrimSpace
+	cleaned := f.noBlank.ReplaceAllString(s, " ")
 	cleaned = strings.ReplaceAll(cleaned, "\n", "")
-	if b {
-		cleaned = strings.ReplaceAll(cleaned, "           ", "") // thanks Brave
-	}
 	return cleaned
 }
 
