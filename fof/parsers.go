@@ -76,12 +76,7 @@ func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 			if blurb == "" {
 				f.errorLog.Printf("unable to get blurb for %s\n", pd.name)
 			}
-			var cleaned string
-			if pd.name == "brave" {
-				cleaned = f.cleanBlurb(blurb, true)
-			} else {
-				cleaned = f.cleanBlurb(blurb, false)
-			}
+			cleaned := f.cleanBlurb(blurb)
 			localResults[link] = cleaned
 			f.searches.store(term, link, cleaned)
 		}
@@ -89,24 +84,9 @@ func (f *fof) parseSearchResults(data, term string, pd *parseData) {
 	})
 }
 
-func (f *fof) cleanBlurb(s string, b bool) string {
-	// handle internal spaces (mainly w/ Brave), otherwise use TrimSpace
+func (f *fof) cleanBlurb(s string) string {
 	cleaned := f.noBlank.ReplaceAllString(s, " ")
+	cleaned = strings.TrimSpace(cleaned)
 	cleaned = strings.ReplaceAll(cleaned, "\n", "")
 	return cleaned
 }
-
-// func (f *fof) test(pd *parseData, ch chan string) {
-// 	for u := range ch {
-// 		func(u string) {
-// 			urlTerm := strings.Split(u, "GETTERM")
-// 			s, err := f.makeRequest(urlTerm[0], f.config.timeout)
-// 			if err != nil {
-// 				fmt.Printf("error in makeRequest: %v\n", err)
-
-// 				return
-// 			}
-// 			f.parseSearchResults(s, urlTerm[1], pd)
-// 		}(u)
-// 	}
-// }

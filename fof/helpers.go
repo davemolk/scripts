@@ -47,7 +47,7 @@ func (f *fof) writeData(name string, data map[string]string) {
 	}
 	defer file.Close()
 
-	b, err := json.Marshal(data)
+	b, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
 		log.Fatal(err)
 	}

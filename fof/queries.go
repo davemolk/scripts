@@ -46,13 +46,6 @@ func (f *fof) makeQueryData() []*queryData {
 	}
 	qdSlice = append(qdSlice, duck)
 
-	// blocks a lot
-	google := &queryData{
-		base:   "https://www.google.com/search?q=",
-		spacer: "+",
-	}
-	_ = google
-
 	yahoo := &queryData{
 		base:   "https://search.yahoo.com/search?p=",
 		spacer: "+",
@@ -103,14 +96,6 @@ func (f *fof) makeParseData() []*parseData {
 		name:          "duck",
 	}
 	pdSlice = append(pdSlice, duck)
-
-	google := &parseData{
-		blurbSelector: "div[style='-webkit-line-clamp:2'] span",
-		itemSelector:  "div.g",
-		linkSelector:  "a",
-		name:          "google",
-	}
-	_ = google
 
 	yahoo := &parseData{
 		blurbSelector: "div.compText",
