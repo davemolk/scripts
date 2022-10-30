@@ -119,7 +119,12 @@ func (f *fof) makeParseData() []*parseData {
 func (f *fof) makeQueryString(wg *sync.WaitGroup, data *queryData, term string, ch chan string) {
 	defer wg.Done()
 	cleanQ := strings.Replace(f.config.searchTarget, " ", data.spacer, -1)
-	url := fmt.Sprintf("%s%s%s%s", data.base, cleanQ, data.spacer, term)
+	var url string
+	if f.config.exact {
+		url = fmt.Sprintf("%s\"%s%s%s\"", data.base, cleanQ, data.spacer, term)
+	} else {
+		url = fmt.Sprintf("%s%s%s%s", data.base, cleanQ, data.spacer, term)
+	}
 	// jenky, lol
 	url = fmt.Sprintf("%sGETTERM%s", url, term)
 	ch <- url

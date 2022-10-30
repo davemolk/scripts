@@ -11,6 +11,7 @@ import (
 
 type config struct {
 	concurrency  int
+	exact        bool
 	searchTarget string
 	file         string
 	timeout      int
@@ -28,6 +29,7 @@ type fof struct {
 func main() {
 	var config config
 	flag.IntVar(&config.concurrency, "c", 10, "max number of goroutines to use at any given time")
+	flag.BoolVar(&config.exact, "exact", false, "exact match of search query (some engines will only provide exact matches, while others will give 'close to exact' as well as exact)")
 	flag.StringVar(&config.searchTarget, "s", "", "base search target (please enclose phrases in quotes)")
 	flag.StringVar(&config.file, "f", "", "file name containing a list of terms")
 	flag.IntVar(&config.timeout, "t", 5000, "timeout (in ms, default 5000)")
