@@ -1,9 +1,13 @@
 # scripts
-a collection of odds, ends, and everything in between (added below once stable)
+a collection of odds, ends, and everything in between (added below once stable). see individual directories for individual readmes (maybe?).
 
 # go
 ## fof
 enter a search term and a file name (list of additional search terms, line-separated) and get back results (blurb plus url) from ask, bing, brave, duckduckgo, yahoo, and yandex. use 'exact' for exact term matching.
+
+## ngd
+google dorking, but with duck duck go (so, not google dorking...)
+(larger version under development)
 
 ## scanner
 two different ways to make a port scanner
