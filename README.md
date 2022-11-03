@@ -5,6 +5,9 @@ a collection of odds, ends, and everything in between (added below once stable).
 ## fof
 enter a search term and a file name (list of additional search terms, line-separated) and get back results (blurb plus url) from ask, bing, brave, duckduckgo, yahoo, and yandex. use 'exact' for exact term matching.
 
+## lines
+take a bunch of files with line-separated urls/words/whatevers and get one large file containing all those urls/words/whatevers. Or, do the same thing with csv files.
+
 ## ngd
 google dorking, but with duck duck go (so, not google dorking...)
 (larger version under development)
