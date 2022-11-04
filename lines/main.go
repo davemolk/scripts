@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -18,7 +19,7 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory to read files from")
 	flag.StringVar(&ext, "ext", "txt", "file extension (csv or txt")
 	flag.Parse()
-	
+
 	files, err := readDir(dir, ext)
 	if err != nil {
 		log.Fatal(err)
@@ -40,10 +41,10 @@ func main() {
 	go func() {
 		defer close(exit)
 		switch {
-			case ext == "txt":
-				writeTxt(mergeCh)
-			case ext == "csv":
-				writeCSV(mergeCh)
+		case ext == "txt":
+			writeTxt(mergeCh)
+		case ext == "csv":
+			writeCSV(mergeCh)
 		}
 	}()
 
@@ -55,7 +56,7 @@ func writeTxt(mergeCh <-chan []string) {
 	f, err := os.Create("results.txt")
 	if err != nil {
 		fmt.Println(err)
-		return	
+		return
 	}
 	defer f.Close()
 	for v := range mergeCh {
@@ -67,7 +68,7 @@ func writeCSV(mergeCh <-chan []string) {
 	f, err := os.Create("results.csv")
 	if err != nil {
 		fmt.Println(err)
-		return	
+		return
 	}
 	defer f.Close()
 	w := csv.NewWriter(f)
@@ -83,6 +84,8 @@ func writeCSV(mergeCh <-chan []string) {
 
 func merge(cs []<-chan []string) <-chan []string {
 	var wg sync.WaitGroup
+	wg.Add(len(cs))
+
 	out := make(chan []string)
 
 	send := func(c <-chan []string) {
@@ -91,8 +94,6 @@ func merge(cs []<-chan []string) <-chan []string {
 			out <- n
 		}
 	}
-
-	wg.Add(len(cs))
 
 	for _, c := range cs {
 		go send(c)
@@ -141,11 +142,14 @@ func readFile(file, ext string) (<-chan []string, error) {
 	case ext == "csv":
 		c := csv.NewReader(f)
 		go func() {
+			defer close(ch)
 			for {
 				record, err := c.Read()
-				if err == io.EOF {
-					close(ch)
-					return
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						return
+					}
+					log.Fatal(err)
 				}
 				ch <- record
 			}
@@ -153,6 +157,7 @@ func readFile(file, ext string) (<-chan []string, error) {
 	case ext == "txt":
 		scanner := bufio.NewScanner(f)
 		go func() {
+			defer close(ch)
 			for scanner.Scan() {
 				var lines []string
 				lines = append(lines, scanner.Text())
@@ -161,9 +166,7 @@ func readFile(file, ext string) (<-chan []string, error) {
 					fmt.Printf("error for %s: %v\n", file, err)
 					break
 				}
-
 			}
-			close(ch)
 		}()
 	}
 
