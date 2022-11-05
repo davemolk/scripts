@@ -162,10 +162,9 @@ func readFile(file, ext string) (<-chan []string, error) {
 				var lines []string
 				lines = append(lines, scanner.Text())
 				ch <- lines
-				if err := scanner.Err(); err != nil {
-					fmt.Printf("error for %s: %v\n", file, err)
-					break
-				}
+			}
+			if err := scanner.Err(); err != nil {
+				fmt.Printf("error for %s: %v\n", file, err)
 			}
 		}()
 	}
