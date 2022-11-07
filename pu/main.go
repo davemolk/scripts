@@ -11,12 +11,12 @@ import (
 
 type config struct {
 	domains bool
-	file string
-	keys bool
-	kv bool
-	paths bool
-	user bool
-	values bool
+	file    string
+	keys    bool
+	kv      bool
+	paths   bool
+	user    bool
+	values  bool
 	verbose bool
 }
 
@@ -39,11 +39,11 @@ func main() {
 	p := &pu{
 		config: config,
 	}
-	
+
 	if !p.inputValid(config) {
 		log.Fatal("must choose something to parse")
 	}
-	
+
 	ch, err := p.read(config)
 	if err != nil {
 		log.Fatal(err)
@@ -51,21 +51,28 @@ func main() {
 
 	switch {
 	case config.domains:
-		for u := range p.domains(p.parsed(ch)) {
-			fmt.Println(u)
+		for d := range p.domains(p.parsed(ch)) {
+			fmt.Println(d)
+		}
+	case config.keys:
+		for k := range p.keys(p.kvMap(p.parsed(ch))) {
+			fmt.Println(k)
 		}
 	case config.kv:
-		for u := range p.kvMap(p.parsed(ch)) {
-			fmt.Println(u)
+		for kv := range p.kvMap(p.parsed(ch)) {
+			fmt.Println(kv)
 		}
-	
 	case config.paths:
-		for u := range p.paths(p.parsed(ch)) {
-			fmt.Println(u)
+		for path := range p.paths(p.parsed(ch)) {
+			fmt.Println(path)
 		}
 	case config.user:
 		for u := range p.user(p.parsed(ch)) {
 			fmt.Println(u)
+		}
+	case config.values:
+		for v := range p.values(p.kvMap(p.parsed(ch))) {
+			fmt.Println(v)
 		}
 	}
 }
@@ -89,6 +96,26 @@ func (p *pu) domains(urls <-chan *url.URL) <-chan string {
 	return ch
 }
 
+func (p *pu) keys(kvMap <-chan map[string][]string) <-chan []string {
+	ch := make(chan []string)
+
+	go func() {
+		defer close(ch)
+		for kv := range kvMap {
+			keys := make([]string, len(kv))
+			i := 0
+			for key := range kv {
+				keys[i] = key
+				i++
+			}
+			if len(keys) > 0 {
+				ch <- keys
+			}
+		}
+	}()
+	return ch
+}
+
 func (p *pu) kvMap(urls <-chan *url.URL) <-chan map[string][]string {
 	ch := make(chan map[string][]string)
 
@@ -97,7 +124,7 @@ func (p *pu) kvMap(urls <-chan *url.URL) <-chan map[string][]string {
 		for u := range urls {
 			m, err := url.ParseQuery(u.RawQuery)
 			if err != nil {
-				if p.config.verbose{
+				if p.config.verbose {
 					log.Printf("param parsing error: %v\n", err)
 				}
 				continue
@@ -108,28 +135,13 @@ func (p *pu) kvMap(urls <-chan *url.URL) <-chan map[string][]string {
 	return ch
 }
 
-// func getKeys(kv <-chan map[string][]string) <-chan []string {
-// 	ch := make(chan []string)
-
-// 	go func() {
-// 		defer close(ch)
-// 		keys := make([]string, len(kv))
-// 		i := 0
-// 		for k := range kv {
-// 			for key := range k {
-
-// 			}
-// 		}
-// 	}()
-// }
-
 func (p *pu) paths(urls <-chan *url.URL) <-chan string {
 	ch := make(chan string)
 
 	go func() {
 		defer close(ch)
 		for u := range urls {
-			if u.Path != "" {
+			if u.Path != "/" && u.Path != "" {
 				ch <- u.Path
 			}
 		}
@@ -171,6 +183,25 @@ func (p *pu) user(urls <-chan *url.URL) <-chan *url.Userinfo {
 	return ch
 }
 
+func (p *pu) values(kvMap <-chan map[string][]string) <-chan []string {
+	ch := make(chan []string)
+
+	go func() {
+		defer close(ch)
+		for kv := range kvMap {
+			var values []string
+			for _, value := range kv {
+				values = append(values, value...)
+			}
+			if len(values) > 0 {
+				ch <- values
+			}
+		}
+	}()
+
+	return ch
+}
+
 func (p *pu) read(config config) (<-chan string, error) {
 	ch := make(chan string)
 	var scanner *bufio.Scanner
@@ -185,7 +216,7 @@ func (p *pu) read(config config) (<-chan string, error) {
 	default:
 		scanner = bufio.NewScanner(os.Stdin)
 	}
-	
+
 	go func() {
 		defer close(ch)
 		for scanner.Scan() {
@@ -195,6 +226,6 @@ func (p *pu) read(config config) (<-chan string, error) {
 			log.Printf("error for %s: %v\n", config.file, err)
 		}
 	}()
-	
+
 	return ch, nil
 }
