@@ -143,6 +143,7 @@ func readFile(file, ext string) (<-chan []string, error) {
 		c := csv.NewReader(f)
 		go func() {
 			defer close(ch)
+			defer f.Close()
 			for {
 				record, err := c.Read()
 				if err != nil {
@@ -158,6 +159,7 @@ func readFile(file, ext string) (<-chan []string, error) {
 		scanner := bufio.NewScanner(f)
 		go func() {
 			defer close(ch)
+			defer f.Close()
 			for scanner.Scan() {
 				var lines []string
 				lines = append(lines, scanner.Text())

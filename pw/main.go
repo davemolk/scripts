@@ -11,18 +11,14 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	ch, err := read()
 	if err != nil {
 		log.Fatal(err)
 	}
-	var result []string
-	for c := range specials(nums(lower(upper(ch)))) {
-		result = append(result, c)
-	}
-	noSpace := strings.Replace(strings.Join(result, ""), " ", "", -1)
-	fmt.Println(noSpace)
-	// check at least 1 number, at least 1 lower, 1 upper, 1 special char, maybe weigh the 
-	// things differently (instead of 50/50 chance of swapping?)
+
+	pw := checkBoxes(specials(nums(lower(upper(ch)))))
+	fmt.Println(pw)	
 }
 
 func read() (<-chan string, error) {
@@ -43,17 +39,12 @@ func read() (<-chan string, error) {
 	return ch, nil
 }
 
-func gimmeNum(num int) int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return r.Intn(num)
-}
-
-func upper(s <-chan string) <-chan string {
+func upper(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
-		for char := range s {
-			if gimmeNum(2) == 1 {
+		for char := range str {
+			if rand.Intn(2) == 1 {
 				char = strings.ToUpper(char)
 			}
 			ch <- char
@@ -62,12 +53,12 @@ func upper(s <-chan string) <-chan string {
 	return ch
 }
 
-func lower(s <-chan string) <-chan string {
+func lower(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
-		for char := range s {
-			if gimmeNum(2) == 1 {
+		for char := range str {
+			if rand.Intn(2) == 1 {
 				char = strings.ToLower(char)
 			}
 			ch <- char
@@ -76,14 +67,14 @@ func lower(s <-chan string) <-chan string {
 	return ch
 }
 
-func nums(s <-chan string) <-chan string {
+func nums(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
 		nums := getNums()
-		for char := range s {
-			if gimmeNum(2) == 1 {
-				char = nums[gimmeNum(len(nums))]
+		for char := range str {
+			if rand.Intn(2) == 1 {
+				char = nums[rand.Intn(len(nums))]
 			}
 			ch <- char
 		}
@@ -91,20 +82,46 @@ func nums(s <-chan string) <-chan string {
 	return ch
 }
 
-func specials(s <-chan string) <-chan string {
+func specials(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
 		sp := getSpecials()
-		for char := range s {
-			if gimmeNum(2) == 1 {
-				char = sp[gimmeNum(len(sp))]
+		for char := range str {
+			if rand.Intn(2) == 1 {
+				char = sp[rand.Intn(len(sp))]
 			}
 			ch <- char
 		}
 	}()
 	return ch
 }
+
+func checkBoxes(str <-chan string) string {
+	var preCheck []string
+	for char := range str {
+		preCheck = append(preCheck, char)
+	}
+	lowers := getLetters()
+	newLower := lowers[rand.Intn(len(lowers))]
+	newUpper := strings.ToUpper(lowers[rand.Intn(len(lowers))])
+	specials := getSpecials()
+	newSpecial := specials[rand.Intn(len(specials))]
+	nums := getNums()
+	newNum := nums[rand.Intn(len(nums))]
+	preCheck = append(preCheck, newLower, newUpper, newSpecial, newNum)
+
+	rand.Shuffle(len(preCheck), func(i, j int) {
+		preCheck[i], preCheck[j] = preCheck[j], preCheck[i]
+	})
+
+	noSpaces := strings.Replace(strings.Join(preCheck, ""), " ", "", -1)
+	// cause that one time...
+	noReturn := strings.Replace(noSpaces, "\n", `n\`, -1)
+	
+	return noReturn
+}
+
 
 func getSpecials() []string {
 	return []string{
@@ -115,5 +132,11 @@ func getSpecials() []string {
 func getNums() []string {
 	return []string{
 		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+	}
+}
+
+func getLetters() []string{
+	return []string{
+		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 	}
 }
