@@ -71,10 +71,10 @@ func nums(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
-		nums := getNums()
+		nums := "0123456789"
 		for char := range str {
 			if rand.Intn(2) == 1 {
-				char = nums[rand.Intn(len(nums))]
+				char = string(nums[rand.Intn(len(nums))])
 			}
 			ch <- char
 		}
@@ -86,10 +86,10 @@ func specials(str <-chan string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer close(ch)
-		sp := getSpecials()
+		sp := `" !#$%&()*,-./:;<=>?@[\]^_{|}~`
 		for char := range str {
 			if rand.Intn(2) == 1 {
-				char = sp[rand.Intn(len(sp))]
+				char = string(sp[rand.Intn(len(sp))])
 			}
 			ch <- char
 		}
@@ -102,41 +102,24 @@ func checkBoxes(str <-chan string) string {
 	for char := range str {
 		preCheck = append(preCheck, char)
 	}
-	lowers := getLetters()
-	newLower := lowers[rand.Intn(len(lowers))]
-	newUpper := strings.ToUpper(lowers[rand.Intn(len(lowers))])
-	specials := getSpecials()
-	newSpecial := specials[rand.Intn(len(specials))]
-	nums := getNums()
-	newNum := nums[rand.Intn(len(nums))]
-	preCheck = append(preCheck, newLower, newUpper, newSpecial, newNum)
+	nums := "0123456789"
+	specials := `" !#$%&()*,-./:;<=>?@[]^_{|}~`
+	lowers := "abcdefghijlkmnopqrstuvwxyz"
+	uppers := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	buf := make([]byte, 4)
+	buf[0] = nums[rand.Intn(len(nums))]
+	buf[1] = specials[rand.Intn(len(specials))]
+	buf[2] = lowers[rand.Intn(len(lowers))]
+	buf[3] = uppers[rand.Intn(len(uppers))]
 
+	for _, b := range buf {
+		preCheck = append(preCheck, string(b))
+	}
 	rand.Shuffle(len(preCheck), func(i, j int) {
 		preCheck[i], preCheck[j] = preCheck[j], preCheck[i]
 	})
 
-	noSpaces := strings.Replace(strings.Join(preCheck, ""), " ", "", -1)
-	// cause that one time...
-	noReturn := strings.Replace(noSpaces, "\n", `n\`, -1)
+	pw := strings.Replace(strings.Join(preCheck, ""), " ", "", -1)
 	
-	return noReturn
-}
-
-
-func getSpecials() []string {
-	return []string{
-		`"`, " ", "!", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", `\`, "`", "]", "^", "_", "{", "|", "}", "~",
-	}
-}
-
-func getNums() []string {
-	return []string{
-		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-	}
-}
-
-func getLetters() []string{
-	return []string{
-		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-	}
+	return pw
 }
