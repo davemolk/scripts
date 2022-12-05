@@ -18,6 +18,9 @@ parse urls in style. read urls from a line-separated file or from stdin. Get dom
 ## pw
 need a kinda sorta safe(ish?) password and too lazy to log into your pw manager or some rando genderating rando site? type something in and get a mostly gibberish password that contains at least one lower-case letter, one upper-case, one special character, and one number. there are, of course, much easier ways to do this -- I was mainly interested in practicing pipelines :)
 
+## rp
+replace a key=value parameter in a given URL(s) with your own key=value. Bonus! Pipe in an encoded mess and decode it.
+
 ## tas
 throw against site (pull down archived links from Wayback Machine, run against the site, see what status codes currently are)
 

@@ -1,0 +1,4 @@
+https://example.com/foo/bar?first=1&second=2
+https://example.com/bar?foo=me&baz=barz
+https://www.example.com/rp?name=golang&language=en&mascot=gopher&foo=bar
+google.com
