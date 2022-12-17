@@ -1,0 +1,1 @@
+full version (renamed urlbits) can be found [here](http://github.com/davemolk/urlbits)!

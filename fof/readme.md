@@ -1,0 +1,1 @@
+full version (renamed searcher) can be found [here](https://github.com/davemolk/searcher)!
