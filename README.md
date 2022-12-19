@@ -14,6 +14,8 @@ take a bunch of files with line-separated urls/words/whatevers and get one large
 google dorking, but with duck duck go (so, not google dorking...)
 (larger version under development)
 
+full version (renamed dorking) can be found [here](http://github.com/davemolk/dorking)!
+
 ## pu
 parse urls in style. read urls from a line-separated file or from stdin. Get domains, keys, a map of keys and values, paths, user info (username and password), or values.
 

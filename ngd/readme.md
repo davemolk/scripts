@@ -3,6 +3,9 @@ google dorking, but for duck duck go (so...not google dorking?)
 
 heads up — this is under active development in a new repo, so stay tuned and reach out if there's something you want to see!
 
+edit: the full version (renamed dorking) can be found [here](http://github.com/davemolk/dorking)
+
+
 ### example usage
 ```
 ./ndg -qe "dave molk music" -no davemolkmusic.com
