@@ -2,6 +2,9 @@
 a collection of odds, ends, and everything in between (added below once stable). see individual directories for individual readmes (maybe?).
 
 # go
+## 403
+mostly a port of https://github.com/yunemse48/403bypasser into Go
+
 ## fof
 enter a search term and a file name (list of additional search terms, line-separated) and get back results (blurb plus url) from ask, bing, brave, duckduckgo, yahoo, and yandex. use 'exact' for exact term matching.
 
